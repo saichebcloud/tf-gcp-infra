@@ -1,0 +1,30 @@
+name: VALIDATE TERRAFORM TEMPLATES
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: TERRAFORM VALIDATION
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up terraform with version on the runner
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.7.3
+
+      - name: Navigate to terraform infrastructure
+        run: |
+          cd infra/
+
+      - name: Terraform format
+        run: |
+          terraform fmt -check
+
+      - name: Terraform validate
+        run: |
+          terraform validate

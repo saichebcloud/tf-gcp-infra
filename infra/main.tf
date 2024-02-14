@@ -2,33 +2,33 @@ resource "google_compute_network" "vpc_network" {
 
   name                            = var.vpc_network_name
   project                         = var.gcp_project
-  auto_create_subnetworks         = false
-  routing_mode                    = "REGIONAL"
-  delete_default_routes_on_create = true
+  auto_create_subnetworks         = var.auto_create_subnet_bool
+  routing_mode                    = var.routing_mode
+  delete_default_routes_on_create = var.delete_default_routes
 
 }
 
-resource "google_compute_subnetwork" "webapp" {
+resource "google_compute_subnetwork" "subnet_1" {
 
-  name          = "webapp"
-  ip_cidr_range = var.webapp_ip_cidr_range
+  name          = var.subnet_1_name
+  ip_cidr_range = var.subnet_1_ip_cidr_range
   network       = google_compute_network.vpc_network.name
 
 }
 
-resource "google_compute_subnetwork" "db" {
+resource "google_compute_subnetwork" "subnet_2" {
 
-  name          = "db"
-  ip_cidr_range = var.db_ip_cidr_range
+  name          = var.subnet_2_name
+  ip_cidr_range = var.subnet_2_ip_cidr_range
   network       = google_compute_network.vpc_network.name
 
 }
 
-resource "google_compute_route" "webapp_route" {
+resource "google_compute_route" "route" {
 
-  name             = "webapp-route"
-  dest_range       = "0.0.0.0/0"
+  name             = "${var.route_name}-route"
+  dest_range       = var.route_dest_range
   network          = google_compute_network.vpc_network.name
-  next_hop_gateway = "default-internet-gateway"
+  next_hop_gateway = var.next_hop_gateway
 
 }
