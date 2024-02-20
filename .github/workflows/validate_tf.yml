@@ -17,10 +17,6 @@ jobs:
         with:
           terraform_version: 1.7.3
 
-      - name: Navigate to terraform infrastructure
-        run: |
-          cd infra
-          pwd
       - name: Terraform init
         run: |
           terraform init
