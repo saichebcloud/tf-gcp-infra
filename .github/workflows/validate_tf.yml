@@ -21,10 +21,10 @@ jobs:
         run: cd infra && terraform init
 
       - name: Terraform format
-        run: terraform fmt -check
+        run: cd infra && terraform fmt -check
 
       - name: print working directory
         run: pwd
 
       - name: Terraform validate
-        run: terraform validate
+        run: cd infra && terraform validate
