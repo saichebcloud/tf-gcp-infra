@@ -32,3 +32,5 @@ resource "google_compute_route" "route" {
   next_hop_gateway = var.next_hop_gateway
 
 }
+
+
