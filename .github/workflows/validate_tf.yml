@@ -23,5 +23,8 @@ jobs:
       - name: Terraform format
         run: terraform fmt -check
 
+      - name: print working directory
+        run: pwd
+
       - name: Terraform validate
         run: terraform validate
