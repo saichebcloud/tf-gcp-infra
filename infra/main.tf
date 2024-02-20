@@ -1,4 +1,4 @@
-resource "google_compute_network" "vpc_network" {
+resource "google_compute_network {
 
   name                            = var.vpc_network_name
   project                         = var.gcp_project
