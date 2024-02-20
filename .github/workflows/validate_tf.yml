@@ -19,6 +19,7 @@ jobs:
 
       - name: Navigate to terraform infrastructure
         run: |
+          cd infra
           pwd
       - name: Terraform init
         run: |
