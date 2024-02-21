@@ -17,14 +17,21 @@ jobs:
         with:
           terraform_version: 1.7.3
 
-      - name: Navigate to terraform infrastructure
-        run: |
-          cd infra/
+      - name: Terraform init
+        run: terraform init
+        working-directory: ./infra
 
-      - name: Terraform format
+      - name: Terraform Format Check
         run: |
-          terraform fmt -check
+          for template in $(find . -name '*.tf'); do
+             terraform fmt "$template"
+             if ! git diff --exit-code "$template"; then
+               echo "Terraform template $template is not correctly formatted."
+               exit 1
+             fi
+           done
+        working-directory: ./infra
 
       - name: Terraform validate
-        run: |
-          terraform validate
+        run: terraform validate
+        working-directory: ./infra

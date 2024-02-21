@@ -32,3 +32,42 @@ resource "google_compute_route" "route" {
   next_hop_gateway = var.next_hop_gateway
 
 }
+
+resource "google_compute_firewall" "webapp_firewall" {
+
+  name    = var.firewall_name
+  network = google_compute_network.vpc_network.name
+
+  allow {
+    protocol = var.allow_protocol
+    ports    = var.allow_ports
+  }
+
+  source_ranges = var.source_ranges
+
+  target_tags = google_compute_instance.my_instance.tags
+
+}
+
+resource "google_compute_instance" "my_instance" {
+
+  name         = var.vm_name
+  machine_type = var.machine_type
+  network_interface {
+    access_config {
+      network_tier = var.network_tier
+    }
+    subnetwork = google_compute_subnetwork.subnet_1.name
+  }
+  boot_disk {
+    initialize_params {
+      image = var.custom_img_source
+      type  = var.vm_type
+    }
+  }
+
+  tags = var.instance_tags
+
+  zone = var.vm_zone
+
+}
