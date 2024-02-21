@@ -43,6 +43,24 @@ resource "google_compute_firewall" "webapp_firewall" {
     ports    = var.allow_ports
   }
 
+  priority = var.allow_rule_priority
+
+  source_ranges = var.source_ranges
+
+  target_tags = google_compute_instance.my_instance.tags
+
+}
+
+resource "google_compute_firewall" "deny_firewall_rule" {
+
+  name    = var.deny_firewall_name
+  network = google_compute_network.vpc_network.name
+
+  deny {
+    protocol = var.deny_protocol
+    ports    = var.deny_ports
+  }
+
   source_ranges = var.source_ranges
 
   target_tags = google_compute_instance.my_instance.tags
