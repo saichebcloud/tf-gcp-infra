@@ -114,3 +114,23 @@ variable "instance_tags" {
   type    = list(string)
   default = ["webapp"]
 }
+
+variable "allow_rule_priority" {
+  type    = number
+  default = 999
+}
+
+variable "deny_firewall_name" {
+  type    = string
+  default = "deny-firewall-rule"
+}
+
+variable "deny_protocol" {
+  type    = string
+  default = "all"
+}
+
+variable "deny_ports" {
+  type    = list(string)
+  default = []
+}
