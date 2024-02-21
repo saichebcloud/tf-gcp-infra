@@ -33,5 +33,7 @@ jobs:
         working-directory: ./infra
 
       - name: Terraform validate
-        run: terraform validate
+        run: |
+          terraform validate
+          if [ $? -ne 0 ]; then exit 1; fi
         working-directory: ./infra
