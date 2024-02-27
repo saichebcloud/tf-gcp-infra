@@ -74,7 +74,7 @@ variable "allow_protocol" {
 
 variable "allow_ports" {
   type    = list(string)
-  default = ["5000"]
+  default = ["5000", "22"]
 }
 
 variable "source_ranges" {
@@ -133,4 +133,99 @@ variable "deny_protocol" {
 variable "deny_ports" {
   type    = list(string)
   default = []
+}
+
+variable "internal_ip_config_name" {
+  type    = string
+  default = "private-ip-address"
+}
+
+variable "ip_address_type" {
+  type    = string
+  default = "INTERNAL"
+}
+
+variable "address_purpose" {
+  type    = string
+  default = "VPC_PEERING"
+}
+
+variable "address_prefix_length" {
+  type    = number
+  default = 16
+}
+
+variable "google_network_service" {
+  type    = string
+  default = "servicenetworking.googleapis.com"
+}
+
+variable "my_sql_instance_name" {
+  type    = string
+  default = "sql"
+}
+
+variable "my_sql_version" {
+  type    = string
+  default = "MYSQL_8_0"
+}
+
+variable "deletion_protection" {
+  type    = bool
+  default = false
+}
+
+variable "my_sql_tier" {
+  type    = string
+  default = "db-f1-micro"
+}
+
+variable "my_sql_availability" {
+  type    = string
+  default = "REGIONAL"
+}
+
+variable "my_sql_disk_type" {
+  type    = string
+  default = "PD_SSD"
+}
+
+variable "my_sql_disk_size" {
+  type    = number
+  default = 100
+}
+
+variable "my_sql_public" {
+  type    = bool
+  default = false
+}
+
+variable "my_sql_path_google_service" {
+  type    = bool
+  default = true
+}
+
+variable "random_int_min" {
+  type    = number
+  default = 10
+}
+
+variable "random_int_max" {
+  type    = number
+  default = 10000
+}
+
+variable "my_sql_db_name" {
+  type    = string
+  default = "csye"
+}
+
+variable "random_password_length" {
+  type    = number
+  default = 10
+}
+
+variable "my_sql_username" {
+  type    = string
+  default = "saicheb"
 }
