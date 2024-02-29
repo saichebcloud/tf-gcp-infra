@@ -74,7 +74,7 @@ variable "allow_protocol" {
 
 variable "allow_ports" {
   type    = list(string)
-  default = ["5000"]
+  default = ["5000", "22"]
 }
 
 variable "source_ranges" {
