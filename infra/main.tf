@@ -105,7 +105,7 @@ resource "google_compute_instance" "my_instance" {
   zone = var.vm_zone
 
 
-  depends_on = [google_sql_database.my_database]
+  depends_on = [google_sql_database.my_database, google_sql_user.my_sql_user, random_password.mysql_password]
 
   metadata = {
     DB_NAME     = google_sql_database.my_database.name
