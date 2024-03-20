@@ -229,3 +229,53 @@ variable "my_sql_username" {
   type    = string
   default = "saicheb"
 }
+
+variable "dns_zone_name" {
+  type    = string
+  default = "webapp-zone"
+}
+
+variable "domain_name" {
+  type    = string
+  default = "saicheb.me."
+}
+
+variable "dns_record_type" {
+  type    = string
+  default = "A"
+}
+
+variable "service_account_id" {
+  type    = string
+  default = "webapp-sa"
+}
+
+variable "service_account_display_name" {
+  type    = string
+  default = "Webapp Service Account"
+}
+
+variable "role_1" {
+  type    = string
+  default = "roles/logging.admin"
+}
+
+variable "role_2" {
+  type    = string
+  default = "roles/monitoring.metricWriter"
+}
+
+variable "service_account_member" {
+  type    = string
+  default = "serviceAccount"
+}
+
+variable "allow_stopping_for_update" {
+  type    = bool
+  default = true
+}
+
+variable "service_account_scope" {
+  type    = list(string)
+  default = ["cloud-platform"]
+}

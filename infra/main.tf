@@ -104,6 +104,13 @@ resource "google_compute_instance" "my_instance" {
 
   zone = var.vm_zone
 
+  service_account {
+    email  = google_service_account.webapp_service_account.email
+    scopes = ["https://www.googleapis.com/auth/logging.admin", "https://www.googleapis.com/auth/monitoring.write"]
+  }
+
+  allow_stopping_for_update = var.allow_stopping_for_update
+
 
   depends_on = [google_sql_database.my_database, google_sql_user.my_sql_user, random_password.mysql_password]
 
@@ -171,4 +178,29 @@ resource "google_sql_user" "my_sql_user" {
   name     = var.my_sql_username
   instance = google_sql_database_instance.sql_instance.name
   password = random_password.mysql_password.result
+}
+
+resource "google_dns_record_set" "webapp_dns_record" {
+  managed_zone = var.dns_zone_name
+  name         = var.domain_name
+  type         = var.dns_record_type
+
+  rrdatas = [google_compute_instance.my_instance.network_interface[0].access_config[0].nat_ip]
+}
+
+resource "google_service_account" "webapp_service_account" {
+  account_id   = "${var.service_account_id}-${random_integer.random_generated_int.result}"
+  display_name = var.service_account_display_name
+}
+
+resource "google_project_iam_binding" "service_account_binding_1" {
+  project = var.gcp_project
+  members = ["${var.service_account_member}:${google_service_account.webapp_service_account.email}"]
+  role    = var.role_1
+}
+
+resource "google_project_iam_binding" "service_account_binding_2" {
+  project = var.gcp_project
+  members = ["${var.service_account_member}:${google_service_account.webapp_service_account.email}"]
+  role    = var.role_2
 }
