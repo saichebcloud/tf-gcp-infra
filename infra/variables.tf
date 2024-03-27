@@ -265,6 +265,21 @@ variable "role_2" {
   default = "roles/monitoring.metricWriter"
 }
 
+variable "role_3" {
+  type    = string
+  default = "roles/pubsub.publisher"
+}
+
+variable "role_4" {
+  type    = string
+  default = "roles/cloudfunctions.developer"
+}
+
+variable "role_5" {
+  type    = string
+  default = "roles/pubsub.publisher"
+}
+
 variable "service_account_member" {
   type    = string
   default = "serviceAccount"
@@ -278,4 +293,94 @@ variable "allow_stopping_for_update" {
 variable "service_account_scope" {
   type    = list(string)
   default = ["cloud-platform"]
+}
+
+variable "schema_name" {
+  type    = string
+  default = "custom_schema"
+}
+
+variable "schema_type" {
+  type    = string
+  default = "AVRO"
+}
+
+variable "schema_definition" {
+  type    = string
+  default = "{\n  \"type\" : \"record\",\n  \"name\" : \"Avro\",\n  \"fields\" : [\n    {\n      \"name\" : \"email\",\n      \"type\" : \"string\"\n    },\n    {\n      \"name\" : \"token\",\n      \"type\" : \"string\"\n    }\n  ]\n}\n"
+}
+
+variable "pub_sub_topic" {
+  type    = string
+  default = "verify_user"
+}
+
+variable "pub_sub_message_retention_duration" {
+  type    = string
+  default = "604800s"
+}
+
+variable "schema_location" {
+  type    = string
+  default = "projects/devp-414719/schemas/"
+}
+
+variable "schema_encoding" {
+  type    = string
+  default = "JSON"
+}
+
+variable "sub_name" {
+  type    = string
+  default = "email_user"
+}
+
+variable "bucket_location" {
+  type    = string
+  default = "US"
+}
+
+variable "force_delete_bucket" {
+  type    = bool
+  default = true
+}
+
+variable "connector_name" {
+  type    = string
+  default = "cloud-functions-connector"
+}
+
+variable "connector_cidr_range" {
+  type    = string
+  default = "10.8.0.0/28"
+}
+
+variable "cloud_object_name" {
+  type    = string
+  default = "python_zip_code"
+}
+
+variable "cloud_function_name" {
+  type    = string
+  default = "send_email"
+}
+
+variable "cloud_function_runtime" {
+  type    = string
+  default = "python39"
+}
+
+variable "api_key" {
+  type    = string
+  default = "949e6201ac30ffe152e888858b4ed602-309b0ef4-c814b3da"
+}
+
+variable "event_type" {
+  type    = string
+  default = "google.pubsub.topic.publish"
+}
+
+variable "cloud_function_file_name" {
+  type    = string
+  default = "cloud-function.zip"
 }

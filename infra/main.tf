@@ -106,7 +106,7 @@ resource "google_compute_instance" "my_instance" {
 
   service_account {
     email  = google_service_account.webapp_service_account.email
-    scopes = ["https://www.googleapis.com/auth/logging.admin", "https://www.googleapis.com/auth/monitoring.write"]
+    scopes = ["https://www.googleapis.com/auth/logging.admin", "https://www.googleapis.com/auth/monitoring.write", "https://www.googleapis.com/auth/pubsub"]
   }
 
   allow_stopping_for_update = var.allow_stopping_for_update
@@ -203,4 +203,92 @@ resource "google_project_iam_binding" "service_account_binding_2" {
   project = var.gcp_project
   members = ["${var.service_account_member}:${google_service_account.webapp_service_account.email}"]
   role    = var.role_2
+}
+
+resource "google_pubsub_schema" "custom_schema" {
+  name       = var.schema_name
+  type       = var.schema_type
+  definition = var.schema_definition
+}
+
+resource "google_pubsub_topic" "verify_user" {
+  name                       = var.pub_sub_topic
+  message_retention_duration = var.pub_sub_message_retention_duration
+  depends_on                 = [google_pubsub_schema.custom_schema]
+
+  schema_settings {
+    schema   = "${var.schema_location}${var.schema_name}"
+    encoding = var.schema_encoding
+  }
+}
+
+resource "google_project_iam_binding" "service_account_binding_3" {
+  project = var.gcp_project
+  members = ["${var.service_account_member}:${google_service_account.webapp_service_account.email}"]
+  role    = var.role_3
+}
+
+resource "google_pubsub_subscription" "email_user" {
+  name  = var.sub_name
+  topic = google_pubsub_topic.verify_user.id
+}
+
+resource "google_storage_bucket" "bucket" {
+  name          = "${var.my_sql_username}-${random_integer.random_generated_int.result}"
+  location      = var.bucket_location
+  force_destroy = var.force_delete_bucket
+}
+
+resource "google_storage_bucket_object" "cloud_functon" {
+  name   = var.cloud_object_name
+  bucket = google_storage_bucket.bucket.id
+  source = var.cloud_function_file_name
+}
+
+resource "google_vpc_access_connector" "connector" {
+  name          = var.connector_name
+  ip_cidr_range = var.connector_cidr_range
+  network       = google_compute_network.vpc_network.name
+}
+
+resource "google_cloudfunctions_function" "send_verification_email" {
+  name                  = var.cloud_function_name
+  runtime               = var.cloud_function_runtime
+  source_archive_bucket = google_storage_bucket.bucket.name
+  source_archive_object = google_storage_bucket_object.cloud_functon.name
+  vpc_connector         = google_vpc_access_connector.connector.id
+
+  event_trigger {
+    event_type = var.event_type
+    resource   = google_pubsub_topic.verify_user.id
+  }
+
+  region = var.gcp_region
+
+  service_account_email = google_service_account.webapp_service_account.email
+
+
+  environment_variables = {
+    DB_NAME            = google_sql_database.my_database.name
+    DB_HOST            = google_sql_database_instance.sql_instance.private_ip_address
+    DB_USER            = google_sql_user.my_sql_user.name
+    DB_PASSWORD        = random_password.mysql_password.result
+    DB_CONNECTION_NAME = google_sql_database_instance.sql_instance.connection_name
+    API_KEY            = var.api_key
+  }
+
+}
+
+resource "google_project_iam_member" "cloud_function_iam" {
+  project = var.gcp_project
+  role    = var.role_4
+  member  = "serviceAccount:${google_service_account.webapp_service_account.email}"
+}
+
+resource "google_pubsub_topic_iam_binding" "topic_iam_binding" {
+  topic = google_pubsub_topic.verify_user.name
+  role  = var.role_5
+  members = [
+    "serviceAccount:${google_service_account.webapp_service_account.email}"
+  ]
 }
