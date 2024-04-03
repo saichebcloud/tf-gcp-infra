@@ -54,7 +54,7 @@ resource "google_compute_firewall" "webapp_firewall" {
   name    = var.firewall_name
   network = google_compute_network.vpc_network.name
 
-  direction = "INGRESS"
+  direction = var.direction
 
   allow {
     protocol = var.allow_protocol
@@ -63,7 +63,7 @@ resource "google_compute_firewall" "webapp_firewall" {
 
   priority = var.allow_rule_priority
 
-  source_ranges = [google_compute_global_forwarding_rule.lb_forwarding_rule.ip_address, "35.191.0.0/16", "130.211.0.0/22"]
+  source_ranges = [google_compute_global_forwarding_rule.lb_forwarding_rule.ip_address, var.gcp_health_range_1, var.gcp_health_range_2]
 
   target_tags = var.allow_firewall_tags
 
@@ -246,7 +246,7 @@ resource "google_pubsub_topic_iam_binding" "topic_iam_binding" {
 
 
 resource "google_compute_region_instance_template" "webapp_template" {
-  name         = "webapp-template"
+  name         = var.instance_template_name
   machine_type = var.machine_type
   disk {
     source_image = var.custom_img_source
@@ -338,7 +338,7 @@ resource "google_compute_region_autoscaler" "autoscaler" {
 }
 
 resource "google_compute_health_check" "backend_health" {
-  name               = "backend-health-check"
+  name               = var.backend_health_check_name
   check_interval_sec = var.health_check_interval
   timeout_sec        = var.health_check_timeout
   healthy_threshold  = var.unhealthy_threshold
