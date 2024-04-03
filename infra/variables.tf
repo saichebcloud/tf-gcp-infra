@@ -447,12 +447,12 @@ variable "base_instance_name" {
 
 variable "wait_for_instances" {
   type    = bool
-  default = true
+  default = false
 }
 
 variable "min_autoscaling_replicas" {
   type    = number
-  default = 2
+  default = 1
 }
 
 variable "max_autoscaling_replicas" {
@@ -498,4 +498,29 @@ variable "load_balancer_name" {
 variable "allow_firewall_tags" {
   type    = list(string)
   default = ["webapp", "allow-health-check"]
+}
+
+variable "direction" {
+  type    = string
+  default = "INGRESS"
+}
+
+variable "gcp_health_range_1" {
+  type    = string
+  default = "35.191.0.0/16"
+}
+
+variable "gcp_health_range_2" {
+  type    = string
+  default = "130.211.0.0/22"
+}
+
+variable "instance_template_name" {
+  type    = string
+  default = "webapp-template"
+}
+
+variable "backend_health_check_name" {
+  type    = string
+  default = "backend-health-check"
 }
