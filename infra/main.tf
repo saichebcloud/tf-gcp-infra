@@ -54,6 +54,8 @@ resource "google_compute_firewall" "webapp_firewall" {
   name    = var.firewall_name
   network = google_compute_network.vpc_network.name
 
+  direction = "INGRESS"
+
   allow {
     protocol = var.allow_protocol
     ports    = var.allow_ports
@@ -61,9 +63,9 @@ resource "google_compute_firewall" "webapp_firewall" {
 
   priority = var.allow_rule_priority
 
-  source_ranges = var.source_ranges
+  source_ranges = [google_compute_global_forwarding_rule.lb_forwarding_rule.ip_address, "35.191.0.0/16", "130.211.0.0/22"]
 
-  target_tags = google_compute_instance.my_instance.tags
+  target_tags = var.allow_firewall_tags
 
 }
 
@@ -79,61 +81,7 @@ resource "google_compute_firewall" "deny_firewall_rule" {
 
   source_ranges = var.source_ranges
 
-  target_tags = google_compute_instance.my_instance.tags
-
-}
-
-resource "google_compute_instance" "my_instance" {
-
-  name         = var.vm_name
-  machine_type = var.machine_type
-  network_interface {
-    access_config {
-      network_tier = var.network_tier
-    }
-    subnetwork = google_compute_subnetwork.subnet_1.name
-  }
-  boot_disk {
-    initialize_params {
-      image = var.custom_img_source
-      type  = var.vm_type
-    }
-  }
-
-  tags = var.instance_tags
-
-  zone = var.vm_zone
-
-  service_account {
-    email  = google_service_account.webapp_service_account.email
-    scopes = ["https://www.googleapis.com/auth/logging.admin", "https://www.googleapis.com/auth/monitoring.write", "https://www.googleapis.com/auth/pubsub"]
-  }
-
-  allow_stopping_for_update = var.allow_stopping_for_update
-
-
-  depends_on = [google_sql_database.my_database, google_sql_user.my_sql_user, random_password.mysql_password]
-
-  metadata = {
-    DB_NAME     = google_sql_database.my_database.name
-    DB_HOST     = google_sql_database_instance.sql_instance.private_ip_address
-    DB_USER     = google_sql_user.my_sql_user.name
-    DB_PASSWORD = random_password.mysql_password.result
-  }
-
-  metadata_startup_script = <<-SCRIPT
-
-  #!/bin/bash
-
-  echo "DB_NAME=${google_sql_database.my_database.name}" > /tmp/.env
-  echo "DB_HOST=${google_sql_database_instance.sql_instance.private_ip_address}" >> /tmp/.env
-  echo "DB_PORT=3306" >> /tmp/.env
-  echo "DB_USER=${google_sql_user.my_sql_user.name}" >> /tmp/.env
-  echo "DB_PASSWORD=${random_password.mysql_password.result}" >> /tmp/.env
-
-  cp /tmp/.env /home/csye6225/.env
-
-  SCRIPT
+  target_tags = ["webapp"]
 
 }
 
@@ -171,7 +119,8 @@ resource "google_sql_database" "my_database" {
 }
 
 resource "random_password" "mysql_password" {
-  length = var.random_password_length
+  length  = var.random_password_length
+  special = var.random_password_special
 }
 
 resource "google_sql_user" "my_sql_user" {
@@ -185,7 +134,8 @@ resource "google_dns_record_set" "webapp_dns_record" {
   name         = var.domain_name
   type         = var.dns_record_type
 
-  rrdatas = [google_compute_instance.my_instance.network_interface[0].access_config[0].nat_ip]
+  # rrdatas = [google_compute_instance.my_instance.network_interface[0].access_config[0].nat_ip]
+  rrdatas = [google_compute_global_forwarding_rule.lb_forwarding_rule.ip_address]
 }
 
 resource "google_service_account" "webapp_service_account" {
@@ -291,4 +241,160 @@ resource "google_pubsub_topic_iam_binding" "topic_iam_binding" {
   members = [
     "serviceAccount:${google_service_account.webapp_service_account.email}"
   ]
+}
+
+
+
+resource "google_compute_region_instance_template" "webapp_template" {
+  name         = "webapp-template"
+  machine_type = var.machine_type
+  disk {
+    source_image = var.custom_img_source
+  }
+  network_interface {
+    access_config {
+      network_tier = var.network_tier
+    }
+    subnetwork = google_compute_subnetwork.subnet_1.self_link
+  }
+  service_account {
+    email  = google_service_account.webapp_service_account.email
+    scopes = var.instance_template_scope
+  }
+
+  metadata = {
+    DB_NAME     = google_sql_database.my_database.name
+    DB_HOST     = google_sql_database_instance.sql_instance.private_ip_address
+    DB_USER     = google_sql_user.my_sql_user.name
+    DB_PASSWORD = random_password.mysql_password.result
+  }
+
+  tags = var.instance_template_tags
+
+  depends_on = [google_sql_database.my_database, google_sql_user.my_sql_user, random_password.mysql_password]
+
+  metadata_startup_script = <<-SCRIPT
+
+  #!/bin/bash
+
+  echo "DB_NAME=${google_sql_database.my_database.name}" > /tmp/.env
+  echo "DB_HOST=${google_sql_database_instance.sql_instance.private_ip_address}" >> /tmp/.env
+  echo "DB_PORT=3306" >> /tmp/.env
+  echo "DB_USER=${google_sql_user.my_sql_user.name}" >> /tmp/.env
+  echo "DB_PASSWORD=${random_password.mysql_password.result}" >> /tmp/.env
+
+  cp /tmp/.env /home/csye6225/.env
+
+  SCRIPT
+}
+
+resource "google_compute_http_health_check" "webapp_health_check" {
+  name               = var.webapp_health_check_name
+  check_interval_sec = var.health_check_interval
+  timeout_sec        = var.health_check_timeout
+  healthy_threshold  = var.unhealthy_threshold
+
+  request_path = var.health_check_path
+  port         = var.webapp_port
+}
+
+resource "google_compute_region_instance_group_manager" "webapp_group_manager" {
+  name               = var.webapp_group_manager_name
+  region             = google_compute_region_instance_template.webapp_template.region
+  base_instance_name = var.base_instance_name
+
+  version {
+    instance_template = google_compute_region_instance_template.webapp_template.id
+    name              = "${var.base_instance_name}-version"
+  }
+  named_port {
+    name = "${var.base_instance_name}-port"
+    port = var.webapp_port
+  }
+
+  wait_for_instances = var.wait_for_instances
+
+  auto_healing_policies {
+    health_check      = google_compute_http_health_check.webapp_health_check.id
+    initial_delay_sec = 30
+  }
+
+}
+
+resource "google_compute_region_autoscaler" "autoscaler" {
+  name   = "${var.base_instance_name}-autoscaler"
+  target = google_compute_region_instance_group_manager.webapp_group_manager.id
+
+  autoscaling_policy {
+    min_replicas    = var.min_autoscaling_replicas
+    max_replicas    = var.max_autoscaling_replicas
+    cooldown_period = var.autoscaler_cooldown
+
+    cpu_utilization {
+      target = var.cpu_util
+    }
+
+  }
+}
+
+resource "google_compute_health_check" "backend_health" {
+  name               = "backend-health-check"
+  check_interval_sec = var.health_check_interval
+  timeout_sec        = var.health_check_timeout
+  healthy_threshold  = var.unhealthy_threshold
+
+  http_health_check {
+    request_path = var.health_check_path
+    port         = var.webapp_port
+  }
+}
+
+resource "google_compute_backend_service" "webapp_backend_service" {
+  name          = "${var.base_instance_name}-backend-service"
+  protocol      = var.backend_protocol
+  health_checks = [google_compute_health_check.backend_health.id]
+  backend {
+    group = google_compute_region_instance_group_manager.webapp_group_manager.instance_group
+  }
+  port_name = "${var.base_instance_name}-port"
+}
+
+resource "google_compute_url_map" "webapp_map" {
+  name            = "${var.base_instance_name}-map"
+  default_service = google_compute_backend_service.webapp_backend_service.self_link
+  depends_on      = [google_compute_backend_service.webapp_backend_service]
+  host_rule {
+    hosts        = ["saicheb.me"]
+    path_matcher = "${var.base_instance_name}-matcher"
+  }
+  path_matcher {
+    name            = "${var.base_instance_name}-matcher"
+    default_service = google_compute_backend_service.webapp_backend_service.self_link
+    path_rule {
+      paths   = ["/*"]
+      service = google_compute_backend_service.webapp_backend_service.self_link
+    }
+  }
+}
+
+resource "google_compute_managed_ssl_certificate" "lb" {
+  name = var.lb_ssl_name
+
+  managed {
+    domains = [var.domain_name]
+  }
+}
+
+resource "google_compute_target_https_proxy" "lb_default" {
+  name             = var.load_balancer_name
+  url_map          = google_compute_url_map.webapp_map.self_link
+  ssl_certificates = [google_compute_managed_ssl_certificate.lb.id]
+
+  depends_on = [google_compute_managed_ssl_certificate.lb, google_compute_url_map.webapp_map]
+}
+
+resource "google_compute_global_forwarding_rule" "lb_forwarding_rule" {
+  name       = var.lb_forwarding_rule
+  target     = google_compute_target_https_proxy.lb_default.id
+  port_range = var.forwarding_port_range
 }

@@ -94,7 +94,7 @@ variable "machine_type" {
 
 variable "network_tier" {
   type    = string
-  default = "STANDARD"
+  default = "PREMIUM"
 }
 
 variable "custom_img_source" {
@@ -223,6 +223,11 @@ variable "my_sql_db_name" {
 variable "random_password_length" {
   type    = number
   default = 10
+}
+
+variable "random_password_special" {
+  type    = bool
+  default = false
 }
 
 variable "my_sql_username" {
@@ -383,4 +388,114 @@ variable "event_type" {
 variable "cloud_function_file_name" {
   type    = string
   default = "cloud-function.zip"
+}
+
+variable "instance_template_scope" {
+  type    = list(string)
+  default = ["cloud-platform"]
+}
+
+variable "instance_template_tags" {
+  type    = list(string)
+  default = ["webapp", "allow-health-check"]
+}
+
+variable "webapp_health_check_name" {
+  type    = string
+  default = "webapp-health-check"
+}
+
+variable "health_check_interval" {
+  type    = number
+  default = 7
+}
+
+variable "health_check_timeout" {
+  type    = number
+  default = 4
+}
+
+variable "healthy_threshold" {
+  type    = number
+  default = 2
+}
+
+variable "unhealthy_threshold" {
+  type    = number
+  default = 2
+}
+
+variable "health_check_path" {
+  type    = string
+  default = "/healthz"
+}
+
+variable "webapp_port" {
+  type    = number
+  default = 5000
+}
+
+variable "webapp_group_manager_name" {
+  type    = string
+  default = "webapp-instance-manager"
+}
+
+variable "base_instance_name" {
+  type    = string
+  default = "webapp"
+}
+
+variable "wait_for_instances" {
+  type    = bool
+  default = true
+}
+
+variable "min_autoscaling_replicas" {
+  type    = number
+  default = 2
+}
+
+variable "max_autoscaling_replicas" {
+  type    = number
+  default = 4
+}
+
+variable "autoscaler_cooldown" {
+  type    = number
+  default = 60
+}
+
+variable "cpu_util" {
+  type    = number
+  default = 0.05
+}
+
+variable "backend_protocol" {
+  type    = string
+  default = "HTTP"
+}
+
+variable "lb_ssl_name" {
+  type    = string
+  default = "load-balancer-ssl"
+}
+
+variable "lb_forwarding_rule" {
+  type    = string
+  default = "lb-forwarding-rule"
+}
+
+variable "forwarding_port_range" {
+  type    = string
+  default = "443"
+}
+
+variable "load_balancer_name" {
+  type    = string
+  default = "load-balancer-https-proxy"
+}
+
+variable "allow_firewall_tags" {
+  type    = list(string)
+  default = ["webapp", "allow-health-check"]
 }
