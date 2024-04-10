@@ -342,7 +342,7 @@ variable "sub_name" {
 
 variable "bucket_location" {
   type    = string
-  default = "US"
+  default = "us-west1"
 }
 
 variable "force_delete_bucket" {
@@ -457,7 +457,7 @@ variable "min_autoscaling_replicas" {
 
 variable "max_autoscaling_replicas" {
   type    = number
-  default = 4
+  default = 3
 }
 
 variable "autoscaler_cooldown" {
@@ -467,7 +467,7 @@ variable "autoscaler_cooldown" {
 
 variable "cpu_util" {
   type    = number
-  default = 0.05
+  default = 0.08
 }
 
 variable "backend_protocol" {
@@ -523,4 +523,39 @@ variable "instance_template_name" {
 variable "backend_health_check_name" {
   type    = string
   default = "backend-health-check"
+}
+
+variable "key_ring_name" {
+  type    = string
+  default = "key_ring"
+}
+
+variable "vm_key_name" {
+  type    = string
+  default = "vm-crypto-key"
+}
+
+variable "db_key_name" {
+  type    = string
+  default = "db-crypto-key"
+}
+
+variable "bucket_key_name" {
+  type    = string
+  default = "bucket-crypto-key"
+}
+
+variable "rotation_period" {
+  type    = string
+  default = "2592000s"
+}
+
+variable "key_ring_role" {
+  type    = string
+  default = "roles/cloudkms.cryptoKeyEncrypterDecrypter"
+}
+
+variable "google_beta_service" {
+  type    = string
+  default = "sqladmin.googleapis.com"
 }
